@@ -1,0 +1,9 @@
+---
+- name: Update and configure system
+  hosts: servers
+  become: true
+  vars:
+    excluded_packages:
+      - nginx
+  roles:
+    - update-and-reboot

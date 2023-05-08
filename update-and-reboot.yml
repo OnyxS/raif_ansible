@@ -1,0 +1,31 @@
+--- 
+- name: Update all packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    force_apt_get: yes
+    cache_valid_time: 3600
+    exclude: "{{ excluded_packages }}"
+  register: update_result
+
+- name: Reboot if system was updated
+  reboot:
+  when: update_result|changed
+
+- name: Get a list of installed kernels
+  command: dpkg -l | grep linux-image | awk '{print $2}'
+  register: installed_kernels
+
+- name: Remove old kernels
+  apt:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ installed_kernels.stdout_lines | sort | reverse | offset(2) }}"
+
+- name: Debug message about kernel cleanup
+  debug:
+    msg: "Old kernels removed successfully"
+
+- name: Debug message about system update
+  debug:
+    msg: "System update complete"
